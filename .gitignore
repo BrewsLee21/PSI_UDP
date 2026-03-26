@@ -148,3 +148,15 @@ Temporary Items
 *.icloud
 
 # End of https://www.toptal.com/developers/gitignore/api/clion,macos
+
+# Object files
+*.o
+
+# Executables
+sender
+receiver
+
+# Backup or temporary files
+*~
+*.swp
+*.tmp
