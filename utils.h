@@ -5,6 +5,7 @@
 #define UTILS_H
 
 #define MAX_DATA_SIZE 1024
+#define PORT "8080"
 
 enum PacketType {
     ACK, // Acknowledgement
