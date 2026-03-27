@@ -9,8 +9,7 @@
 
 #include <unistd.h>
 
-#include "utils.h"
-
+#include "network.h"
 
 int main() {
     struct addrinfo *res, hints;
@@ -26,35 +25,16 @@ int main() {
     scanf("%s", receiver_addr);
     getchar(); // Consume '\n'
 
-    if (getaddrinfo(receiver_addr, PORT, &hints, &res) != 0) {
+    if (getaddrinfo("localhost", PORT, &hints, &res) != 0) {
         fprintf(stderr, "ERROR: getaddrinfo() call failed!\n");
         return 1;
     }
-
-    //struct sockaddr_in *ipv4;
-    //struct sockaddr_in6 *ipv6;
-    int my_socket;
-
-    //char ipstr[INET6_ADDRSTRLEN];
-
     
-    // Create socket and bind to the first available address
+    int my_socket;
+    
+    // Create socket
     struct addrinfo *p;
     for (p = res; p != NULL; p = p->ai_next) {
-
-        // Prints addresses in res
-        /*
-        if (p->ai_family == AF_INET) {
-            ipv4 = (struct sockaddr_in *)p->ai_addr;
-            inet_ntop(AF_INET, &(ipv4->sin_addr), ipstr, sizeof(ipstr));
-            printf("ipv4: %s\n", ipstr);
-        } 
-        else if (p->ai_family == AF_INET6) {
-            ipv6 = (struct sockaddr_in6 *)p->ai_addr;
-            inet_ntop(AF_INET6, &(ipv6->sin6_addr), ipstr, sizeof(ipstr));
-            printf("ipv6: %s\n", ipstr);
-        }
-        */
 
         if ((my_socket = socket(p->ai_family, p->ai_socktype, p->ai_protocol)) == -1) {
             continue;
@@ -65,8 +45,17 @@ int main() {
     
     freeaddrinfo(res);
 
+    struct timeval tv;
+    tv.tv_sec = ACK_TIMEOUT;
+    tv.tv_usec = 0;
+
     if (p == NULL) {
-        fprintf(stderr, "ERROR: Failed to bind to an address!\n");
+        fprintf(stderr, "ERROR: Failed to create socket!\n");
+        return 1;
+    }
+
+    if (setsockopt(my_socket, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv)) == -1) {
+        fprintf(stderr, "ERROR: Failed to set socket options!\n");
         return 1;
     }
 
@@ -76,23 +65,26 @@ int main() {
         return 1;
     }
 
-    char fname[128];
+    peerinfo_t peer;
 
-    printf("Enter file name: ");
-    fgets(fname, sizeof(fname), stdin);
+    printf("sa_family: %u\n", p->ai_addr->sa_family);
+    peer.sock = my_socket;
+    peer.addr = (struct sockaddr_in *)p->ai_addr;
+    peer.addr_len = p->ai_addrlen;
+
+    // TODO: fpath instead and extract fname
+    char fname[MAX_FNAME_SIZE + 1];
+
+    printf("Enter file path (%d bytes): ", MAX_FNAME_SIZE);
+    scanf("%" XSTR(MAX_FNAME_SIZE) "s", fname);
+    
     printf("Sending file: %s\n", fname);
 
-    int bytes_sent;
-    bytes_sent = send(my_socket, fname, strlen(fname), 0);
-    if (bytes_sent == -1) {
-        fprintf(stderr, "ERROR: Failed to send data!\n");
-        close(my_socket);
-        return 1;
-    }
+    FILE *f = fopen(fname, "rb");
 
-    printf("bytes_sent: %d\n", bytes_sent);
+    send_init_packet(peer, fname, f);
 
-
-    close(my_socket);    
+    close(my_socket);   
+    fclose(f); 
     return 0;
 }

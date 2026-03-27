@@ -9,7 +9,7 @@
 
 #include <unistd.h>
 
-#include "utils.h"
+#include "network.h"
 
 int main() {
     struct addrinfo *res, hints;
@@ -67,23 +67,24 @@ int main() {
         fprintf(stderr, "ERROR: Failed to bind to an address!\n");
         return 1;
     }
-
-    struct sockaddr_in sender_addr;
     
     printf("Waiting...\n");
 
-    char data[128];
-    int msg_len;
-    socklen_t addr_len = sizeof(sender_addr);
-    msg_len = recvfrom(my_socket, data, sizeof(data), 0, (struct sockaddr *)&sender_addr, &addr_len);
+    peerinfo_t peer;
+    peer.sock = my_socket;
+    packet_t pck;
 
-    if (msg_len == -1) {
-        fprintf(stderr, "ERROR: Failed to receive data!\n");
-        close(my_socket);
+    if (recv_init_packet(&peer, &pck) == -1) {
         return 1;
     }
+    
+    char ipstr[INET6_ADDRSTRLEN];
+    inet_ntop(AF_INET, &peer.addr->sin_addr, ipstr, sizeof(ipstr));
 
-    printf("Data received: %s\n", data);
+    printf("addr: %s\n", ipstr);
+
+    printf("Done\n");
+    
 
     close(my_socket);
     return 0;
