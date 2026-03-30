@@ -66,21 +66,18 @@ int main() {
     }
 
     peerinfo_t peer;
-
-    printf("sa_family: %u\n", p->ai_addr->sa_family);
     peer.sock = my_socket;
     memcpy(&peer.addr, p->ai_addr, sizeof(struct sockaddr_in));
     peer.addr_len = p->ai_addrlen;
 
-    // TODO: fpath instead and extract fname
-    char fname[MAX_FNAME_SIZE + 1];
+    char fpath[MAX_FPATH_SIZE + 1];
 
-    printf("Enter file path (%d bytes): ", MAX_FNAME_SIZE);
-    scanf("%" XSTR(MAX_FNAME_SIZE) "s", fname);
+    printf("Enter file path (%d bytes): ", MAX_FPATH_SIZE);
+    scanf("%" XSTR(MAX_FPATH_SIZE) "s", fpath);
     
-    printf("Sending file: %s\n", fname);
+    printf("Sending file: %s\n", fpath);
 
-    if (send_file(peer, fname) == -1) {
+    if (send_file(peer, fpath) == -1) {
         close(my_socket);
         return 1;
     }

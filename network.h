@@ -14,7 +14,7 @@
 #define HEADER_SIZE (sizeof(enum PacketType) + sizeof(uint32_t)) // enum + uint32_t
 #define MAX_PACKET_BUFFER_SIZE (HEADER_SIZE + MAX_DATA_SIZE)
 
-#define MAX_FNAME_SIZE 127
+#define MAX_FPATH_SIZE 255
 
 #define STR(x) #x
 #define XSTR(x) STR(x)

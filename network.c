@@ -9,7 +9,7 @@
 #include "network.h"
 #include "utils.h"
 
-#define VERBOSE 1
+#define VERBOSE 0
 
 int send_file(peerinfo_t peer, char *fpath) {
     FILE *f = fopen(fpath, "rb");
@@ -65,6 +65,9 @@ int send_file(peerinfo_t peer, char *fpath) {
         fprintf(stderr, "ERROR: send_file: File transfer failed!\n");
         return -1;
     }
+
+    printf("File transmitted successfully!\n");
+    
     return 0;
 }
 
@@ -166,7 +169,7 @@ int recv_file(int sock) {
         return -1;
     }
 
-    char fname[MAX_FNAME_SIZE + 1];
+    char fname[MAX_FPATH_SIZE + 1];
     uint32_t fsize;
 
     extract_start_data(&p, fname, &fsize);
@@ -181,14 +184,8 @@ int recv_file(int sock) {
         }
 
         if (p.type == END) {
-            if (VERBOSE) {
-                printf("INFO: END packet!\n");
-            }
             break;
         } else if (p.type == DATA) {
-            if (VERBOSE) {
-                printf("INFO: DATA packet: %u\n", p.data_len);
-            }
             bytes_written = fwrite(p.data, sizeof(char), p.data_len, f);
             if (bytes_written == 0) {
                 fprintf(stderr, "ERROR: recv_file: Writing file failed!\n");
@@ -225,13 +222,22 @@ int recv_packet(peerinfo_t peer, packet_t *p) {
         return 1;
     }
 
+    deserialize_packet(buffer, p);
+
+    if (VERBOSE) {
+        if (p->type == END) {
+            printf("INFO: END packet!\n");
+        } else if (p->type == DATA) {
+            printf("INFO: DATA packet: %u\n", p->data_len);
+        }
+    }
+
     if (send_ack(peer) == -1) {
         perror("send_ack");
         fprintf(stderr, "ERROR: recv_packet: Failed to send ACK!\n");
         return -1;
     }
     
-    deserialize_packet(buffer, p);
     return 0;
 }
 
@@ -316,5 +322,5 @@ int ipcmp(struct sockaddr_in *ip1, struct sockaddr_in *ip2) {
 }
 
 void extract_start_data(packet_t *p, char *fname, uint32_t *fsize) {
-    sscanf(p->data, "%" XSTR(MAX_FNAME_SIZE) "s %u", fname, fsize);
+    sscanf(p->data, "%" XSTR(MAX_FPATH_SIZE) "s %u", fname, fsize);
 }
