@@ -9,7 +9,7 @@
 #include "network.h"
 #include "utils.h"
 
-#define VERBOSE 0
+#define VERBOSE 1
 
 int send_file(peerinfo_t peer, char *fpath) {
     FILE *f = fopen(fpath, "rb");
@@ -204,7 +204,6 @@ int recv_packet(peerinfo_t peer, packet_t *p) {
 
     struct sockaddr_in new_addr;
     socklen_t new_addr_len = sizeof(new_addr);
-
     
     if (recvfrom(peer.sock, buffer, MAX_PACKET_BUFFER_SIZE, 0, (struct sockaddr *)&new_addr, &new_addr_len) == -1) {
         // ACK timeout
