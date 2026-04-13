@@ -59,11 +59,13 @@ int main() {
         return 1;
     }
 
+    /*
     if (connect(my_socket, p->ai_addr, p->ai_addrlen)) {
         fprintf(stderr, "ERROR: Failed to connect to receiver!\n");
         close(my_socket);
         return 1;
     }
+    */
 
     peerinfo_t peer;
     peer.sock = my_socket;
